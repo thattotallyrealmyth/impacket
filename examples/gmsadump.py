@@ -489,7 +489,7 @@ if __name__ == '__main__':
     print(version.BANNER)
 
     parser = argparse.ArgumentParser(add_help=True, description='Queries target domain for gMSA data')
-    parser.add_argument('target', action='store', help='domain[/username[:password]]')
+    parser.add_argument('target', action='store', help='[domain/]username[:password]')
     parser.add_argument('-ts', action='store_true', help='Adds timestamp to every logging output')
     parser.add_argument('-debug', action='store_true', help='Turn DEBUG output ON')
     parser.add_argument('-use-ldaps', action='store_true', default=True, help='Try STARTTLS to get msDS-ManagedPassword')
