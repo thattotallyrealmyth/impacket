@@ -69,26 +69,16 @@ FSSAGENT_E_TIMEOUT                   = 0x80042500
 
 class DCERPCSessionError(DCERPCException):
     ERROR_MESSAGES = {
-        FSRVP_E_BAD_STATE: ("FSRVP_E_BAD_STATE",
-            "A method call was invalid because of the state of the server."),
-        FSRVP_E_SHADOW_COPY_SET_IN_PROGRESS: ("FSRVP_E_SHADOW_COPY_SET_IN_PROGRESS",
-            "A call was made to either SetContext or StartShadowCopySet while the creation of another shadow copy set is in progress."),
-        FSRVP_E_NOT_SUPPORTED: ("FSRVP_E_NOT_SUPPORTED",
-            "The file store which contains the share to be shadow copied is not supported by the server."),
-        FSRVP_E_WAIT_TIMEOUT: ("FSRVP_E_WAIT_TIMEOUT",
-            "The wait for a shadow copy commit or expose operation has timed out."),
-        FSRVP_E_WAIT_FAILED: ("FSRVP_E_WAIT_FAILED",
-            "The wait for a shadow copy commit or expose operation has failed."),
-        FSRVP_E_OBJECT_ALREADY_EXISTS: ("FSRVP_E_OBJECT_ALREADY_EXISTS",
-            "The specified object already exists."),
-        FSRVP_E_OBJECT_NOT_FOUND: ("FSRVP_E_OBJECT_NOT_FOUND",
-            "The specified object does not exist."),
-        FSRVP_E_UNSUPPORTED_CONTEXT: ("FSRVP_E_UNSUPPORTED_CONTEXT",
-            "The specified context value is invalid."),
-        FSRVP_E_SHADOWCOPYSET_ID_MISMATCH: ("FSRVP_E_SHADOWCOPYSET_ID_MISMATCH",
-            "The provided ShadowCopySetId does not exist."),
-        FSSAGENT_E_TIMEOUT: ("FSSAGENT_E_TIMEOUT",
-            "The wait for the shadow copy commit operation has timed out."),
+        FSRVP_E_BAD_STATE: ("FSRVP_E_BAD_STATE","A method call was invalid because of the state of the server."),
+        FSRVP_E_SHADOW_COPY_SET_IN_PROGRESS: ("FSRVP_E_SHADOW_COPY_SET_IN_PROGRESS", "A call was made to either SetContext or StartShadowCopySet while the creation of another shadow copy set is in progress."),
+        FSRVP_E_NOT_SUPPORTED: ("FSRVP_E_NOT_SUPPORTED", "The file store which contains the share to be shadow copied is not supported by the server."),
+        FSRVP_E_WAIT_TIMEOUT: ("FSRVP_E_WAIT_TIMEOUT", "The wait for a shadow copy commit or expose operation has timed out."),
+        FSRVP_E_WAIT_FAILED: ("FSRVP_E_WAIT_FAILED", "The wait for a shadow copy commit or expose operation has failed."),
+        FSRVP_E_OBJECT_ALREADY_EXISTS: ("FSRVP_E_OBJECT_ALREADY_EXISTS", "The specified object already exists."),
+        FSRVP_E_OBJECT_NOT_FOUND: ("FSRVP_E_OBJECT_NOT_FOUND", "The specified object does not exist."),
+        FSRVP_E_UNSUPPORTED_CONTEXT: ("FSRVP_E_UNSUPPORTED_CONTEXT", "The specified context value is invalid."),
+        FSRVP_E_SHADOWCOPYSET_ID_MISMATCH: ("FSRVP_E_SHADOWCOPYSET_ID_MISMATCH", "The provided ShadowCopySetId does not exist."),
+        FSSAGENT_E_TIMEOUT: ("FSSAGENT_E_TIMEOUT", "The wait for the shadow copy commit operation has timed out."),
     }
 
     def __init__(self, error_string=None, error_code=None, packet=None):
@@ -103,9 +93,9 @@ class DCERPCSessionError(DCERPCException):
         elif key in self.ERROR_MESSAGES:
             error_msg_short = self.ERROR_MESSAGES[key][0]
             error_msg_verbose = self.ERROR_MESSAGES[key][1]
-            return 'FSRVP SessionError: code: 0x%x - %s - %s' % (self.error_code, error_msg_short, error_msg_verbose)'
+            return 'FSRVP SessionError: code: 0x%x - %s - %s' % (self.error_code, error_msg_short, error_msg_verbose)
         else:
-            return 'FSRVP SessionError: unknown error code: 0x%x' % self.error_code'
+            return 'FSRVP SessionError: unknown error code: 0x%x' % self.error_code
 
 ################################################################################
 # STRUCTURES
