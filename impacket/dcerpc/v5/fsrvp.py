@@ -24,7 +24,7 @@
 #       
 
 from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT, NDRUNION, NDRPOINTER
-from impacket.dcerpc.v5.dtypes import DWORD, LONG, ULONG, BOOL, LPWSTR, WSTR, GUID, LONGLONG, NULL
+from impacket.dcerpc.v5.dtypes import DWORD, LONG, ULONG, BOOL, LPWSTR, WSTR, GUID, LONGLONG
 from impacket.dcerpc.v5.rpcrt import DCERPCException
 from impacket import system_errors
 from impacket.uuid import uuidtup_to_bin
