@@ -38,10 +38,13 @@ from impacket.negoex import (
 
 
 class NegoExTests(unittest.TestCase):
+    TEST_CONVERSATION_ID = uuid.UUID('00112233-4455-6677-8899-aabbccddeeff')
+    TEST_AUTH_SCHEME = uuid.UUID('00010203-0405-0607-0809-0a0b0c0d0e0f')
+    UNKNOWN_MESSAGE_TYPE = 0x1337
 
     def setUp(self):
-        self.conversation_id = uuid.UUID('00112233-4455-6677-8899-aabbccddeeff')
-        self.auth_scheme = uuid.UUID('00010203-0405-0607-0809-0a0b0c0d0e0f')
+        self.conversation_id = self.TEST_CONVERSATION_ID
+        self.auth_scheme = self.TEST_AUTH_SCHEME
 
     @staticmethod
     def _set_u32(data, offset, value):
@@ -138,7 +141,7 @@ class NegoExTests(unittest.TestCase):
             b'\x01\x02',
         )
 
-        unknown = self._set_u32(second, 8, 0x1337)
+        unknown = self._set_u32(second, 8, self.UNKNOWN_MESSAGE_TYPE)
         token = first + second + unknown
         parsed = parseNegoExToken(token)
 
@@ -149,7 +152,7 @@ class NegoExTests(unittest.TestCase):
         self.assertEqual(first, parsed[0].raw_data)
         self.assertEqual(second, parsed[1].raw_data)
         self.assertEqual(unknown, parsed[2].raw_data)
-        self.assertEqual(0x1337, parsed[2].message_type)
+        self.assertEqual(self.UNKNOWN_MESSAGE_TYPE, parsed[2].message_type)
         self.assertIsNone(parsed[2].message)
 
     def test_error_truncated_header(self):
