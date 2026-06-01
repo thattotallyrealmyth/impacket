@@ -155,6 +155,18 @@ def _messageHeader(messageType, seqNum, conversationId, headerLen, messageLen):
     header['ConversationId'] = conversationId.bytes_le
     return header
 
+
+def _sliceMessageData(data, offset, length, field):
+    if length == 0:
+        return b''
+    if offset + length > len(data):
+        raise NegoExParseError(
+            f'{field} extends beyond message',
+            offset=offset,
+            field=field,
+        )
+    return data[offset:offset + length]
+
 ################################################################################
 # STRUCTURES
 ################################################################################
@@ -289,7 +301,12 @@ class NegoMessage(Structure):
         for i in range(0, len(extBlob), EXTENSION_SIZE):
             ext = Extension(extBlob[i:i + EXTENSION_SIZE])
             valueOffset = ext['ByteArrayOffset']
-            ext.ExtensionValue = data[valueOffset:valueOffset + ext['ByteArrayLength']]
+            ext.ExtensionValue = _sliceMessageData(
+                data,
+                valueOffset,
+                ext['ByteArrayLength'],
+                'Extensions.Value',
+            )
             self._extensions.append(ext)
 
     def getAuthSchemeList(self):
@@ -321,7 +338,12 @@ class ExchangeMessage(Structure):
             raise NegoExParseError(f'Invalid EXCHANGE_MESSAGE type: {self["Header"]["MessageType"]}')
 
         offset = self['ExchangeOffset']
-        self['Exchange'] = data[offset:offset + self['ExchangeLength']]
+        self['Exchange'] = _sliceMessageData(
+            data,
+            offset,
+            self['ExchangeLength'],
+            'Exchange',
+        )
     
     def getAuthScheme(self):
         return _normalizeGuidBytes(self['AuthScheme'])
@@ -352,7 +374,12 @@ class VerifyMessage(Structure):
             raise NegoExParseError('Unsupported CHECKSUM scheme', field='CHeader.ChecksumScheme')
 
         offset = self['CHeader']['ChecksumOffset']
-        self['ChecksumValue'] = data[offset:offset + self['CHeader']['ChecksumLength']]
+        self['ChecksumValue'] = _sliceMessageData(
+            data,
+            offset,
+            self['CHeader']['ChecksumLength'],
+            'Checksum',
+        )
     
     def getChecksumValue(self):
         return self['ChecksumValue']
@@ -389,7 +416,12 @@ class AlertMessage(Structure):
         for i in range(0, len(alertBlob), ALERT_SIZE):
             alert = Alert(alertBlob[i:i + ALERT_SIZE])
             valueOffset = alert['ByteArrayOffset']
-            alert.AlertValue = data[valueOffset:valueOffset + alert['ByteArrayLength']]
+            alert.AlertValue = _sliceMessageData(
+                data,
+                valueOffset,
+                alert['ByteArrayLength'],
+                'Alerts.Value',
+            )
             self._alerts.append(alert)
 
     def getAlertList(self):
