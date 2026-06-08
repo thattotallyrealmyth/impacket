@@ -344,21 +344,14 @@ def signAuthPack(authPackDER, certificate, privateKey):
     signedAttrsDER = b'\x31' + encoder.encode(signedAttrs)[1:]
 
     if isinstance(privateKey, rsa.RSAPrivateKey):
-        signature = privateKey.sign(
-            signedAttrsDER,
-            padding.PKCS1v15(),
-            hashes.SHA1()
-        )
+        signature = privateKey.sign(signedAttrsDER, padding.PKCS1v15(), hashes.SHA1())
 
         # SignerInfo.signatureAlgorithm is
         # rsaEncryption and digestAlgorithm separately carries SHA-1.
         signatureOID = id_rsaEncryption
 
     elif isinstance(privateKey, ec.EllipticCurvePrivateKey):
-        signature = privateKey.sign(
-            signedAttrsDER,
-            ec.ECDSA(hashes.SHA256())
-        )
+        signature = privateKey.sign(signedAttrsDER, ec.ECDSA(hashes.SHA256()))
         signatureOID = id_ecdsaWithSHA256
 
     else:
@@ -383,9 +376,7 @@ def signAuthPack(authPackDER, certificate, privateKey):
     signatureAlgorithm['algorithm'] = signatureOID
 
     if signatureOID == id_rsaEncryption:
-        signatureAlgorithm['parameters'] = univ.Any(
-            encoder.encode(univ.Null(''))
-        )
+        signatureAlgorithm['parameters'] = univ.Any(encoder.encode(univ.Null('')))
 
     signerInfo = rfc5652.SignerInfo()
     signerInfo['version'] = 1
@@ -401,8 +392,7 @@ def signAuthPack(authPackDER, certificate, privateKey):
 
     certificateASN1 = decoder.decode(
         certificate.public_bytes(serialization.Encoding.DER),
-        asn1Spec=rfc5280.Certificate()
-    )[0]
+        asn1Spec=rfc5280.Certificate())[0]
 
     certChoice = rfc5652.CertificateChoices()
     certChoice['certificate'] = certificateASN1
@@ -428,15 +418,9 @@ def signAuthPack(authPackDER, certificate, privateKey):
 def extractSignedContent(contentInfoDER):
     # Returns the (eContent, eContentType) carried by a CMS ContentInfo
     # wrapping a SignedData.
-    contentInfo = decoder.decode(
-        contentInfoDER,
-        asn1Spec=rfc5652.ContentInfo()
-    )[0]
+    contentInfo = decoder.decode(contentInfoDER, asn1Spec=rfc5652.ContentInfo())[0]
 
-    signedData = decoder.decode(
-        contentInfo['content'],
-        asn1Spec=rfc5652.SignedData()
-    )[0]
+    signedData = decoder.decode(contentInfo['content'], asn1Spec=rfc5652.SignedData())[0]
 
     encapContentInfo = signedData['encapContentInfo']
     eContent = bytes(encapContentInfo['eContent'])
@@ -514,9 +498,7 @@ def _buildAuthPack(diffie, pkAuthNonce, reqBodyDER, now):
     authPack['clientPublicValue']['algorithm']['parameters'] = univ.Any(
         encoder.encode(dhParameters)
     )
-    authPack['clientPublicValue']['subjectPublicKey'] = univ.BitString(
-        hexValue=publicValueDER.hex()
-    )
+    authPack['clientPublicValue']['subjectPublicKey'] = univ.BitString(hexValue=publicValueDER.hex())
 
     authPack['clientDHNonce'] = diffie.dhNonce
 
