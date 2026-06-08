@@ -22,7 +22,7 @@
 #
 #   The Diffie-Hellman exchange, the reply-key derivation and the overall
 #   message flow are derived from skelsec's minikerberos PKINIT
-#   implementation.
+#   implementation. Pretty much hes the reason why this even 
 #
 # References:
 #   RFC 4556 - Public Key Cryptography for Initial Authentication in
@@ -181,8 +181,7 @@ class KDCDHKeyInfo(univ.Sequence):
     )
 
 
-# DomainParameters (RFC 3279 Section 2.3.3). The q field is required by the
-# syntax but unused by PKINIT, so it is sent as 0.
+# DomainParameters RFC 3279 Section 2.3.3
 class DHDomainParameters(univ.Sequence):
     componentType = namedtype.NamedTypes(
         namedtype.NamedType('p', univ.Integer()),
@@ -233,7 +232,7 @@ class DiffieHellman:
 
 
 ################################################################################
-# Reply-key derivation (RFC 4556 Section 3.2.3.1)
+# Reply-key derivation RFC 4556 Section 3.2.3.1
 ################################################################################
 
 def truncateKey(value, keySize):
@@ -286,8 +285,7 @@ def _unwrapExplicitContextTag(derData, expectedTag):
     seq_set(asReq, 'req-body') gives us the req-body component with the outer
     Kerberos context-specific EXPLICIT [4] tag.
 
-    PKINIT paChecksum must be SHA1(DER(KDC-REQ-BODY)), not SHA1(DER([4]
-    KDC-REQ-BODY)).
+    PKINIT paChecksum is SHA1(DER(KDC-REQ-BODY))
     """
     if not derData:
         return derData
@@ -321,7 +319,7 @@ def signAuthPack(authPackDER, certificate, privateKey):
     # as expected by the KDC (RFC 4556 Section 3.2.1).
     contentDigest = hashlib.sha1(authPackDER).digest()
 
-    # signedAttrs: content-type + message-digest (RFC 5652 Section 5.3)
+    # signedAttrs is content-type + message-digest (RFC 5652 Section 5.3)
     contentTypeAttr = rfc5652.Attribute()
     contentTypeAttr['attrType'] = id_contentType
     contentTypeAttr['attrValues'][0] = univ.Any(
@@ -352,8 +350,8 @@ def signAuthPack(authPackDER, certificate, privateKey):
             hashes.SHA1()
         )
 
-        # Windows PKINIT/minikerberos style: SignerInfo.signatureAlgorithm is
-        # rsaEncryption; digestAlgorithm separately carries SHA-1.
+        # SignerInfo.signatureAlgorithm is
+        # rsaEncryption and digestAlgorithm separately carries SHA-1.
         signatureOID = id_rsaEncryption
 
     elif isinstance(privateKey, ec.EllipticCurvePrivateKey):
@@ -491,8 +489,7 @@ def loadCertAndKeyFromPEM(certFile, keyFile):
 ################################################################################
 
 def _buildAuthPack(diffie, pkAuthNonce, reqBodyDER, now):
-    # Be defensive: if caller accidentally passed the [4] EXPLICIT req-body
-    # encoding, strip it before calculating paChecksum.
+    # if caller accidentally passed,  strip it before calculating paChecksum.
     reqBodyDER = _unwrapExplicitContextTag(reqBodyDER, 0xa4)
 
     dhParameters = DHDomainParameters()
@@ -582,7 +579,6 @@ def getKerberosTGTPKINIT(clientName, certificate, privateKey, domain, kdcHost=No
 
     pkAuthNonce = rand.getrandbits(31)
 
-    # Critical PKINIT detail:
     # checksum must be over DER(KDC-REQ-BODY), without the outer [4] EXPLICIT
     # tag used by the surrounding AS-REQ req-body field.
     reqBodyDER = encodeKDCReqBodyForPKINITChecksum(reqBody)
@@ -619,28 +615,15 @@ def getKerberosTGTPKINIT(clientName, certificate, privateKey, domain, kdcHost=No
 
     LOG.debug('Sending PKINIT AS-REQ to KDC %s' % (kdcHost or domain))
 
-    tgt = sendReceive(
-        encoder.encode(asReq),
-        domain,
-        kdcHost
-    )
+    tgt = sendReceive(encoder.encode(asReq), domain, kdcHost)
 
-    asRep = decoder.decode(
-        tgt,
-        asn1Spec=AS_REP()
-    )[0]
+    asRep = decoder.decode(tgt, asn1Spec=AS_REP())[0]
 
-    return _processPKINITASRep(
-        tgt,
-        asRep,
-        diffie,
-        pkAuthNonce
-    )
+    return _processPKINITASRep(tgt, asRep, diffie, pkAuthNonce)
 
 
 def _processPKINITASRep(tgt, asRep, diffie, expectedNonce):
-    # Decrypts a PKINIT AS-REP and returns the same 4-tuple as getKerberosTGT:
-    # (tgt, cipher, oldSessionKey, sessionKey).
+    # Decrypts a PKINIT AS-REP and returns the same 4-tuple as getKerberosTGT
     paPkAsRepDER = None
 
     for padata in asRep['padata']:
@@ -653,10 +636,7 @@ def _processPKINITASRep(tgt, asRep, diffie, expectedNonce):
     if paPkAsRepDER is None:
         raise Exception('PA-PK-AS-REP not found in AS-REP padata')
 
-    paPkAsRep = decoder.decode(
-        paPkAsRepDER,
-        asn1Spec=PA_PK_AS_REP()
-    )[0]
+    paPkAsRep = decoder.decode(paPkAsRepDER, asn1Spec=PA_PK_AS_REP())[0]
 
     dhInfo = paPkAsRep['dhInfo']
 
@@ -671,10 +651,7 @@ def _processPKINITASRep(tgt, asRep, diffie, expectedNonce):
     if contentType != id_pkinit_DHKeyData:
         LOG.warning('Unexpected content type in DHRepInfo: %s' % contentType)
 
-    kdcDHKeyInfo = decoder.decode(
-        content,
-        asn1Spec=KDCDHKeyInfo()
-    )[0]
+    kdcDHKeyInfo = decoder.decode(content, asn1Spec=KDCDHKeyInfo())[0]
 
     if int(kdcDHKeyInfo['nonce']) != expectedNonce:
         raise Exception(
@@ -685,12 +662,7 @@ def _processPKINITASRep(tgt, asRep, diffie, expectedNonce):
         )
 
     serverPublicKeyDER = kdcDHKeyInfo['subjectPublicKey'].asOctets()
-    serverPublicKey = int(
-        decoder.decode(
-            serverPublicKeyDER,
-            asn1Spec=univ.Integer()
-        )[0]
-    )
+    serverPublicKey = int(decoder.decode(serverPublicKeyDER, asn1Spec=univ.Integer())[0])
 
     sharedKey = diffie.exchange(serverPublicKey)
 
@@ -703,10 +675,7 @@ def _processPKINITASRep(tgt, asRep, diffie, expectedNonce):
     cipher = _enctype_table[enctype]
 
     if enctype == int(constants.EncryptionTypes.aes256_cts_hmac_sha1_96.value):
-        replyKey = Key(
-            cipher.enctype,
-            truncateKey(fullKey, 32)
-        )
+        replyKey = Key(cipher.enctype, truncateKey(fullKey, 32))
 
     elif enctype == int(constants.EncryptionTypes.aes128_cts_hmac_sha1_96.value):
         replyKey = Key(cipher.enctype, truncateKey(fullKey, 16))
