@@ -553,18 +553,20 @@ class PKU2UContext(object):
     def isEstablished(self):
         return self.state == self.STATE_COMPLETE
 
-
-def getNegoExAuthScheme():
-    return PKU2U_NEGOEX_AUTH_SCHEME
-
 def createNegoExContext(certificate, privateKey, targetName):
     return PKU2UContext(certificate, privateKey, targetName)
 
-def processNegoExExchange(ctx, exchangePayload=None):
-    outputToken = ctx.step(exchangePayload)
-    return outputToken, ctx.isEstablished()
+def getAuthSchemeId(self):
+    return PKU2U_NEGOEX_AUTH_SCHEME
 
-def getSessionKey(ctx):
-    if not ctx.isEstablished():
-        raise Exception('PKU2U context not yet established')
-    return ctx.sessionKey
+def getVerifyKey(self):
+    # Key is available once AS exchange completes and we have a session key
+    if self.sessionKey is None:
+        return None
+    if self.sessionKey.enctype == constants.EncryptionTypes.aes256_cts_hmac_sha1_96.value:
+        checksumType = constants.ChecksumTypes.hmac_sha1_96_aes256.value
+    elif self.sessionKey.enctype == constants.EncryptionTypes.aes128_cts_hmac_sha1_96.value:
+        checksumType = constants.ChecksumTypes.hmac_sha1_96_aes128.value
+    else:
+        return None
+    return self.sessionKey.contents, self.sessionKey.enctype, checksumType
